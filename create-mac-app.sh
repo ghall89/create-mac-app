@@ -5,14 +5,17 @@ ZIP_FILENAME="mac-app-template-main.zip"
 BUNDLE_NAME_PLACEHOLDER="{{bundle_name}}"
 BUNDLE_ID_PLACEHOLDER="{{bundle_id}}"
 
-# Check if bundle_name argument is provided
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <bundle_name>"
-    echo "Example: $0 MyProject"
-    exit 1
+# Get bundle_name from argument or prompt
+if [ "$#" -eq 1 ]; then
+    BUNDLE_NAME=$1
+else
+    read -p "Enter your project name (e.g. MyProject): " BUNDLE_NAME
+    if [ -z "$BUNDLE_NAME" ]; then
+        echo "Error: Project name cannot be empty"
+        exit 1
+    fi
 fi
 
-BUNDLE_NAME=$1
 EXTRACTED_DIR="${ZIP_FILENAME%.zip}"
 BUNDLE_ID="com.${USER}.${BUNDLE_NAME}"
 
@@ -95,5 +98,23 @@ else
     echo "Warning: Expected file $OLD_FILE not found"
 fi
 
+cd $BUNDLE_NAME
+
+# Set up ENV file
+
+ mv ".env.example" ".env" || {
+    echo "Failed to rename .env.example"
+    exit 1
+}
+
+tail -n +3 ".env" > ".env.tmp" && mv ".env.tmp" ".env" || {
+    echo "Failed to modify .env file"
+    exit 1
+}
+
+# Initialize git
+
+git init
+git add -A && git commit -m "Initialize project"
 
 echo "All done!"
