@@ -52,8 +52,16 @@ cd "$BUNDLE_NAME" || {
 }
 
 # Replace {{bundle_name}} in file contents
-echo "Replacing $BUNDLE_NAME_PLACEHOLDER in file contents with $BUNDLE_NAME..."
-find . -type f -exec sed -i '' -e "s/$BUNDLE_NAME_PLACEHOLDER/$BUNDLE_NAME/g" {} + 2>/dev/null
+# Escape special characters for sed
+ESCAPED_BUNDLE_NAME=$(printf '%s\n' "$BUNDLE_NAME" | sed -e 's/[][\/&]/\\&/g')
+
+find . -type f -exec sh -c '
+    for file do
+        if file "$file" | grep -q "text"; then
+            sed -i "" "s/{{bundle_name}}/$1/g" "$file"
+        fi
+    done
+' sh "$ESCAPED_BUNDLE_NAME" {} + 2>/dev/null
 
 # Replace {{bundle_id}} in file contents
 echo "Replacing $BUNDLE_ID_PLACEHOLDER in file contents with $BUNDLE_ID..."
